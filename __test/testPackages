@@ -1,0 +1,13 @@
+Package: applist
+Version: 1.5.15~beta1
+Section: System
+Icon: file:///Applications/Cydia.app/Sections/hethong.png
+MD5sum: 01b79849cf6bb141f537257d3248b75b
+
+Package: ch.mdaus.utils
+Version: 0.0.4
+Section: Addons
+Filename: ./debs/1598.deb
+MD5sum: 30d6b7cb77b8ce30d74449ed86e1cd2f
+SHA1: a0c874c5a5b99be29b7923d5c862b4a8042093ad
+
