@@ -1,8 +1,9 @@
-const http = require("http");
-const https = require("https");
 const fs = require("fs");
 const lineReader = require("line-reader");
 const crypto = require("crypto");
+const path = require("path");
+const axios = require("axios");
+const progressBar = require("progress");
 
 const getDateTimeISOFormat = initDate => {
   // get current Japan time
@@ -17,23 +18,36 @@ const getDateTimeISOFormat = initDate => {
     .replace(/\..+/, "");
 };
 
-const downloadFromUlr = (urlString, dest) => {
-  const url = new URL(urlString);
-  const client = url.protocol === "https:" ? https : http;
-  return new Promise((resolve, reject) => {
-    client
-      .get(url, response => {
-        const file = fs.createWriteStream(dest);
-        response.pipe(file);
-        file.on("finish", function() {
-          file.close();
-          resolve(true);
-        });
-      })
-      .on("error", err => {
-        console.log("Download failed: ", urlString, err.message);
-        reject(err);
+const downloadFromUlr = (url, dest) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { data, headers } = await axios({
+        url,
+        method: "GET",
+        responseType: "stream"
       });
+
+      const totalLength = headers["content-length"];
+
+      const pBar = new progressBar("-> downloading [:bar] :percent :etas", {
+        width: 40,
+        complete: "=",
+        incomplete: " ",
+        renderThrottle: 1,
+        total: parseInt(totalLength)
+      });
+
+      const writer = fs.createWriteStream(path.resolve(dest));
+
+      data.on("data", chunk => pBar.tick(chunk.length));
+      data.pipe(writer);
+
+      writer.on("finish", () => {
+        resolve(true);
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
