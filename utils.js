@@ -5,17 +5,14 @@ const path = require("path");
 const axios = require("axios");
 const progressBar = require("progress");
 
-const getDateTimeISOFormat = initDate => {
+const getDateTimeISOFormat = (initDate) => {
   // get current Japan time
   const newDate = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
   const date = initDate || newDate;
 
-  return date
-    .toISOString()
-    .replace(/T|-|:/g, "")
-    .replace(/\..+/, "");
+  return date.toISOString().replace(/T|-|:/g, "").replace(/\..+/, "");
 };
 
 const downloadFromUlr = (url, dest) => {
@@ -24,22 +21,25 @@ const downloadFromUlr = (url, dest) => {
       const { data, headers } = await axios({
         url,
         method: "GET",
-        responseType: "stream"
+        responseType: "stream",
       });
 
-      const totalLength = headers["content-length"];
+      const totalLength = parseInt(headers["content-length"], 10);
+      const lengthInKB = totalLength / 1024;
 
-      const pBar = new progressBar("-> downloading [:bar] :percent :etas", {
-        width: 40,
-        complete: "=",
-        incomplete: " ",
-        renderThrottle: 1,
-        total: parseInt(totalLength)
-      });
+      const pBar = new progressBar(
+        `-> downloading [:bar]  ${lengthInKB}(KB)  :elapsed(s)   :percent  :customRateInKB(KB/s) `,
+        {
+          width: 40,
+          complete: "=",
+          incomplete: " ",
+          total: totalLength,
+        }
+      );
 
       const writer = fs.createWriteStream(path.resolve(dest));
 
-      data.on("data", chunk => pBar.tick(chunk.length));
+      data.on("data", (chunk) => pBar.tick(chunk.length, {customRateInKB: chunk.length/8}));
       data.pipe(writer);
 
       writer.on("finish", () => {
@@ -51,7 +51,7 @@ const downloadFromUlr = (url, dest) => {
   });
 };
 
-const readPackagesFile = packagesFile => {
+const readPackagesFile = (packagesFile) => {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(packagesFile)) {
       reject(new Error("File not exist"));
@@ -67,23 +67,20 @@ const readPackagesFile = packagesFile => {
         debs.push(deb);
         deb = {};
       } else {
-        const attr1 = lineAttr
-          .slice(1)
-          .join(":")
-          .trim();
+        const attr1 = lineAttr.slice(1).join(":").trim();
         if (!lineAttr[0] || !attr1) return;
         deb[lineAttr[0]] = attr1;
       }
 
       if (isLast) {
-        debs.filter(deb => deb.Filename);
+        debs.filter((deb) => deb.Filename);
         resolve(debs);
       }
     });
   });
 };
 
-const getFileSize = file => {
+const getFileSize = (file) => {
   if (fs.existsSync(file)) {
     const stats = fs.statSync(file);
     const fileSizeInBytes = stats["size"];
@@ -105,12 +102,12 @@ const checkFileSum = (file, md5, sha1, sha256, strict = false) => {
       const sha1Algo = crypto.createHash("sha1");
       const sha256Algo = crypto.createHash("sha256");
 
-      s.on("data", function(d) {
+      s.on("data", function (d) {
         md5Algo.update(d);
         sha1Algo.update(d);
         sha256Algo.update(d);
       });
-      s.on("end", function() {
+      s.on("end", function () {
         const md5Actual = md5Algo.digest("hex");
         const sha1Actual = sha1Algo.digest("hex");
         const sha256Actual = sha256Algo.digest("hex");
@@ -149,5 +146,5 @@ module.exports = {
   downloadFromUlr,
   readPackagesFile,
   getFileSize,
-  checkFileSum
+  checkFileSum,
 };

@@ -40,7 +40,7 @@ describe("downloadFromUlr test", () => {
 
   it("url ok", async () => {
     await downloadFromUlr("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "/dev/null");
-    await downloadFromUlr("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "/dev/null");
+    // await downloadFromUlr("http://ipv4.download.thinkbroadband.com/200MB.zip", "/dev/null");
   });
 });
 
