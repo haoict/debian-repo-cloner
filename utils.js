@@ -5,7 +5,7 @@ const path = require("path");
 const axios = require("axios");
 const progressBar = require("progress");
 
-const getDateTimeISOFormat = (initDate) => {
+function getDateTimeISOFormat(initDate) {
   // get current Japan time
   const newDate = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
@@ -13,9 +13,13 @@ const getDateTimeISOFormat = (initDate) => {
   const date = initDate || newDate;
 
   return date.toISOString().replace(/T|-|:/g, "").replace(/\..+/, "");
-};
+}
 
-const downloadFromUlr = (url, dest) => {
+function roundFloat(num, decimalPlaces = 2) {
+  return +(Math.round(num + "e+" + decimalPlaces) + "e-" + decimalPlaces);
+}
+
+function downloadFromUlr(url, dest) {
   return new Promise(async (resolve, reject) => {
     try {
       const { data, headers } = await axios({
@@ -28,7 +32,7 @@ const downloadFromUlr = (url, dest) => {
       const lengthInKB = totalLength / 1024;
 
       const pBar = new progressBar(
-        `-> downloading [:bar]  ${lengthInKB}(KB)  :elapsed(s)   :percent  :customRateInKB(KB/s) `,
+        `-> downloading [:bar]  ${roundFloat(lengthInKB, 0)}(KB)  :elapsed(s)   :percent  :customRateInKB(KB/s) `, // prettier-ignore
         {
           width: 40,
           complete: "=",
@@ -39,7 +43,9 @@ const downloadFromUlr = (url, dest) => {
 
       const writer = fs.createWriteStream(path.resolve(dest));
 
-      data.on("data", (chunk) => pBar.tick(chunk.length, {customRateInKB: chunk.length/8}));
+      data.on("data", (chunk) =>
+        pBar.tick(chunk.length, { customRateInKB: chunk.length / 8 })
+      );
       data.pipe(writer);
 
       writer.on("finish", () => {
@@ -49,9 +55,9 @@ const downloadFromUlr = (url, dest) => {
       reject(err);
     }
   });
-};
+}
 
-const readPackagesFile = (packagesFile) => {
+function readPackagesFile(packagesFile) {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(packagesFile)) {
       reject(new Error("File not exist"));
@@ -78,18 +84,18 @@ const readPackagesFile = (packagesFile) => {
       }
     });
   });
-};
+}
 
-const getFileSize = (file) => {
+function getFileSize(file) {
   if (fs.existsSync(file)) {
     const stats = fs.statSync(file);
     const fileSizeInBytes = stats["size"];
     return fileSizeInBytes;
   }
   return 0;
-};
+}
 
-const checkFileSum = (file, md5, sha1, sha256, strict = false) => {
+function checkFileSum(file, md5, sha1, sha256, strict = false) {
   return new Promise((resolve, reject) => {
     try {
       if (!fs.existsSync(file)) {
@@ -139,10 +145,11 @@ const checkFileSum = (file, md5, sha1, sha256, strict = false) => {
       reject(err);
     }
   });
-};
+}
 
 module.exports = {
   getDateTimeISOFormat,
+  roundFloat,
   downloadFromUlr,
   readPackagesFile,
   getFileSize,

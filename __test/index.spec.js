@@ -2,10 +2,11 @@ const assert = require("assert");
 const sinon = require("sinon");
 const {
   getDateTimeISOFormat,
+  roundFloat,
   downloadFromUlr,
   readPackagesFile,
   getFileSize,
-  checkFileSum
+  checkFileSum,
 } = require("../utils");
 
 describe("getDateTimeISOFormat test", () => {
@@ -21,11 +22,76 @@ describe("getDateTimeISOFormat test", () => {
     const clock = sinon.useFakeTimers({
       now: new Date("2020-03-31T05:14:10Z"),
       shouldAdvanceTime: true,
-      advanceTimeDelta: 20
+      advanceTimeDelta: 20,
     });
     const dateString = getDateTimeISOFormat();
     assert.equal(dateString, "20200331051410");
     clock.restore();
+  });
+});
+
+describe("roundFloat test", () => {
+  it("default (decimalPlaces=2)", async () => {
+    let num;
+    let re;
+
+    num = 1.001;
+    re = roundFloat(num);
+    assert.equal(re, 1);
+
+    num = 1.005;
+    re = roundFloat(num);
+    assert.equal(re, 1.01);
+
+    num = 10;
+    re = roundFloat(num);
+    assert.equal(re, 10);
+
+    num = 1.77777;
+    re = roundFloat(num);
+    assert.equal(re, 1.78);
+  });
+
+  it("decimalPlaces=3", async () => {
+    let num;
+    let re;
+
+    num = 1.001;
+    re = roundFloat(num, 3);
+    assert.equal(re, 1.001);
+
+    num = 1.005;
+    re = roundFloat(num, 3);
+    assert.equal(re, 1.005);
+
+    num = 10;
+    re = roundFloat(num, 3);
+    assert.equal(re, 10);
+
+    num = 1.77777;
+    re = roundFloat(num, 3);
+    assert.equal(re, 1.778);
+  });
+
+  it("decimalPlaces=0", async () => {
+    let num;
+    let re;
+
+    num = 1.001;
+    re = roundFloat(num, 0);
+    assert.equal(re, 1);
+
+    num = 1.005;
+    re = roundFloat(num, 0);
+    assert.equal(re, 1);
+
+    num = 10;
+    re = roundFloat(num, 0);
+    assert.equal(re, 10);
+
+    num = 1.77777;
+    re = roundFloat(num, 0);
+    assert.equal(re, 2);
   });
 });
 
@@ -39,7 +105,10 @@ describe("downloadFromUlr test", () => {
   });
 
   it("url ok", async () => {
-    await downloadFromUlr("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "/dev/null");
+    await downloadFromUlr(
+      "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "/dev/null"
+    );
     // await downloadFromUlr("http://ipv4.download.thinkbroadband.com/200MB.zip", "/dev/null");
   });
 });
@@ -61,7 +130,7 @@ describe("readPackagesFile test", () => {
         Version: "1.5.15~beta1",
         Section: "System",
         Icon: "file:///Applications/Cydia.app/Sections/hethong.png",
-        MD5sum: "01b79849cf6bb141f537257d3248b75b"
+        MD5sum: "01b79849cf6bb141f537257d3248b75b",
       },
       {
         Package: "ch.mdaus.utils",
@@ -69,8 +138,8 @@ describe("readPackagesFile test", () => {
         Section: "Addons",
         Filename: "./debs/1598.deb",
         MD5sum: "30d6b7cb77b8ce30d74449ed86e1cd2f",
-        SHA1: "a0c874c5a5b99be29b7923d5c862b4a8042093ad"
-      }
+        SHA1: "a0c874c5a5b99be29b7923d5c862b4a8042093ad",
+      },
     ];
     assert.deepEqual(debs, expected);
   });
