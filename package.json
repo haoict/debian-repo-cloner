@@ -8,7 +8,7 @@
     "test": "nyc --reporter=html --reporter=text --report-dir=.coverage --exclude='./__test/*.spec.js' mocha --recursive './__test/*.spec.js'"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "crypto": "^1.0.1",
     "decompress": "^4.2.0",
     "decompress-bzip2": "^4.0.0",
